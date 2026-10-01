@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tic Tac Toe</title>
+  <style>
+    :root {
+      --bg: #f4f4f8;
+      --fg: #222;
+      --cell: #fff;
+      --border: #ccc;
+      --x: #e74c3c;
+      --o: #3498db;
+      --win: #fff3b0;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1e1e24;
+        --fg: #eee;
+        --cell: #2c2c34;
+        --border: #444;
+        --win: #5a5220;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.25rem;
+      padding: 16px;
+      font-family: system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+    }
+    h1 { margin: 0; }
+    #status { font-size: 1.25rem; min-height: 1.5em; }
+    #board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      width: min(90vw, 360px);
+    }
+    .cell {
+      aspect-ratio: 1;
+      font-size: clamp(2.5rem, 15vw, 4.5rem);
+      font-weight: bold;
+      background: var(--cell);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      color: var(--fg);
+    }
+    .cell:disabled { cursor: default; }
+    .cell.x { color: var(--x); }
+    .cell.o { color: var(--o); }
+    .cell.win { background: var(--win); }
+    #scores { display: flex; gap: 1.5rem; }
+    #reset {
+      font-size: 1rem;
+      padding: 0.6rem 1.4rem;
+      border: none;
+      border-radius: 8px;
+      background: #2ecc71;
+      color: #fff;
+      cursor: pointer;
+    }
+    #reset:hover { background: #27ae60; }
+  </style>
+</head>
+<body>
+  <h1>Tic Tac Toe</h1>
+  <div id="status"></div>
+  <div id="board"></div>
+  <div id="scores">
+    <span>X: <strong id="score-x">0</strong></span>
+    <span>Unentschieden: <strong id="score-draw">0</strong></span>
+    <span>O: <strong id="score-o">0</strong></span>
+  </div>
+  <button id="reset">Neues Spiel</button>
+
+  <script>
+    const LINES = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8],
+      [0, 3, 6], [1, 4, 7], [2, 5, 8],
+      [0, 4, 8], [2, 4, 6],
+    ];
+
+    const boardEl = document.getElementById('board');
+    const statusEl = document.getElementById('status');
+    const scores = { X: 0, O: 0, draw: 0 };
+    let board, current, gameOver;
+
+    const cells = Array.from({ length: 9 }, (_, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'cell';
+      btn.setAttribute('aria-label', `Feld ${i + 1}`);
+      btn.addEventListener('click', () => play(i));
+      boardEl.appendChild(btn);
+      return btn;
+    });
+
+    function findWinner() {
+      for (const line of LINES) {
+        const [a, b, c] = line;
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+          return line;
+        }
+      }
+      return null;
+    }
+
+    function play(i) {
+      if (gameOver || board[i]) return;
+      board[i] = current;
+      cells[i].textContent = current;
+      cells[i].classList.add(current.toLowerCase());
+      cells[i].disabled = true;
+
+      const winLine = findWinner();
+      if (winLine) {
+        winLine.forEach(idx => cells[idx].classList.add('win'));
+        statusEl.textContent = `Spieler ${current} gewinnt! 🎉`;
+        scores[current]++;
+        endGame();
+      } else if (board.every(Boolean)) {
+        statusEl.textContent = 'Unentschieden!';
+        scores.draw++;
+        endGame();
+      } else {
+        current = current === 'X' ? 'O' : 'X';
+        statusEl.textContent = `Spieler ${current} ist am Zug`;
+      }
+    }
+
+    function endGame() {
+      gameOver = true;
+      cells.forEach(c => (c.disabled = true));
+      document.getElementById('score-x').textContent = scores.X;
+      document.getElementById('score-o').textContent = scores.O;
+      document.getElementById('score-draw').textContent = scores.draw;
+    }
+
+    function reset() {
+      board = Array(9).fill(null);
+      current = 'X';
+      gameOver = false;
+      cells.forEach(c => {
+        c.textContent = '';
+        c.className = 'cell';
+        c.disabled = false;
+      });
+      statusEl.textContent = 'Spieler X ist am Zug';
+    }
+
+    document.getElementById('reset').addEventListener('click', reset);
+    reset();
+  </script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+name: Welpentraining App
+
+on:
+  push:
+    paths:
+      - "welpen-app/**"
+      - ".github/workflows/welpen-app.yml"
+  pull_request:
+    paths:
+      - "welpen-app/**"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: welpen-app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: APK bauen
+        run: ./gradlew --no-daemon assembleDebug assembleRelease
+
+      - name: APK hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: welpentraining-apk
+          path: |
+            welpen-app/app/build/outputs/apk/debug/app-debug.apk
+            welpen-app/app/build/outputs/apk/release/app-release.apk
